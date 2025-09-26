@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Vine</title>
+    
+    <!-- iOS Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vine">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png"> <!-- 180x180px icon -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 0;
+            background: transparent;
+        }
+        
+        /* Vine-themed color override */
+        .text-vine-green {
+            color: #00b489;
+        }
+
+        .bg-vine-green {
+            background-color: #00b489;
+        }
+        
+        /* Ensure videos cover the container without breaking aspect ratio */
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Smooth scroll snapping */
+        .scroll-container {
+            scroll-snap-type: y mandatory;
+        }
+
+        .video-container {
+            scroll-snap-align: start;
+        }
+
+        /* Gradient overlay for better text readability */
+        .text-overlay-gradient {
+            background-image: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%);
+        }
+
+        /* Animation for the like icon */
+        @keyframes like-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .like-animation {
+            animation: like-pop 0.3s ease-in-out;
+        }
+
+        /* Page & Transition classes */
+        .page {
+            position: absolute;
+            inset: 0;
+            transition: opacity 0.3s ease-in-out;
+            padding-bottom: 60px; /* Space for nav bar */
+        }
+        .page.hidden {
+           opacity: 0;
+           pointer-events: none;
+        }
+        #comments-section {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(100%);
+            pointer-events: none;
+        }
+        #comments-section.is-open {
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        #splash-screen {
+            transition: opacity 0.3s ease-in-out;
+        }
+        #splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Initial state for fade-in effect */
+        #home-screen, #main-nav {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-black">
+
+    <!-- Main mobile app container -->
+    <main id="app-container" class="relative max-w-sm mx-auto h-screen bg-black overflow-hidden shadow-2xl">
+        
+        <!-- Splash Screen -->
+        <div id="splash-screen" class="absolute inset-0 bg-black z-50 flex items-center justify-center">
+            <img src="logo.svg" alt="Vine Logo" class="w-32 h-32" onerror="this.style.display='none'; this.parentElement.innerHTML += '<h1 class=\'text-white text-6xl font-bold\'>Vine</h1>'">
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="relative w-full h-full">
+            <!-- Home Page / Video Feed -->
+            <div id="home-screen" class="page">
+                <header class="absolute top-0 left-0 right-0 z-10 flex justify-center items-center p-4 text-white">
+                     <h1 class="text-2xl font-bold tracking-tight">Vine</h1>
+                </header>
+                <div id="video-feed" class="scroll-container h-full w-full overflow-y-auto bg-black">
+                    <!-- Videos will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Discover Page -->
+            <div id="discover-screen" class="page hidden bg-black text-white p-4 overflow-y-auto">
+                <div class="relative mb-4">
+                    <input type="text" placeholder="Search" class="w-full bg-gray-800 rounded-lg py-2 px-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-vine-green">
+                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 70 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <div class="relative rounded-lg overflow-hidden mb-4">
+                     <img src="img1.png" class="w-full h-32 object-cover" onerror="this.src='https://placehold.co/600x200/00b489/FFF?text=Trending'">
+                     <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                         <h3 class="text-white text-3xl font-bold">#justvibing</h3>
+                     </div>
+                </div>
+                 <div class="grid grid-cols-3 gap-1">
+                    <img src="img2.png" class="w-full h-32 object-cover" onerror="this.src='https://placehold.co/200x300/111/FFF?text=Vid1'">
+                    <img src="img3.png" class="w-full h-32 object-cover" onerror="this.src='https://placehold.co/200x300/222/FFF?text=Vid2'">
+                    <img src="img4.png" class="w-full h-32 object-cover" onerror="this.src='https://placehold.co/200x300/333/FFF?text=Vid3'">
+                    <img src="img5.png" class="w-full h-32 object-cover" onerror="this.src='https://placehold.co/200x300/444/FFF?text=Vid4'">
+                    <img src="img6.png" class="w-full h-32 object-cover" onerror="this.src='https://placehold.co/200x300/555/FFF?text=Vid5'">
+                    <img src="img7.png" class="w-full h-32 object-cover" onerror="this.src='https://placehold.co/200x300/666/FFF?text=Vid6'">
+                 </div>
+            </div>
+            
+            <!-- Create Page -->
+            <div id="create-screen" class="page hidden bg-black text-white p-4 flex flex-col items-center justify-center">
+                 <h2 class="text-2xl font-bold text-center">Create Video</h2>
+                 <p class="text-gray-400 mt-2 text-center">Video creation UI would go here.</p>
+            </div>
+
+            <!-- Inbox Page -->
+            <div id="inbox-screen" class="page hidden bg-black text-white p-4 flex flex-col items-center justify-center">
+                <h2 class="text-2xl font-bold text-center">Inbox</h2>
+                <p class="text-gray-400 mt-2 text-center">Your messages would appear here.</p>
+            </div>
+
+            <!-- Profile Page -->
+            <div id="profile-screen" class="page hidden bg-black z-20 text-white p-4 overflow-y-auto">
+                <!-- Profile content will be injected here -->
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div id="comments-section" class="absolute bottom-0 left-0 right-0 h-3/4 bg-gray-900 text-white z-30 rounded-t-2xl flex flex-col">
+            <div class="text-center py-3 border-b border-gray-700">
+                <span id="comment-count" class="font-semibold text-sm">0 Comments</span>
+                <button onclick="toggleComments(false)" class="absolute top-3 right-4 font-bold text-xl">&times;</button>
+            </div>
+            <div id="comments-list" class="flex-grow overflow-y-auto p-4 space-y-4">
+                <!-- Comments will be injected here -->
+            </div>
+            <div class="p-2 border-t border-gray-700">
+                <input type="text" class="w-full bg-gray-800 rounded-lg py-2 px-4 text-white placeholder-gray-500" placeholder="Add comment...">
+            </div>
+        </div>
+
+        <!-- Sticky Navigation Bar -->
+        <nav id="main-nav" class="absolute bottom-0 left-0 right-0 z-20 bg-black flex justify-around items-center p-3 border-t border-gray-800 transition-transform duration-200">
+            <!-- Navigation buttons will be dynamically updated -->
+        </nav>
+    </main>
+    
+    <script>
+        const videoFeed = document.getElementById('video-feed');
+        const mainNav = document.getElementById('main-nav');
+        const commentsSection = document.getElementById('comments-section');
+        let activePage = 'home-screen';
+        let soundTimeout;
+
+        const navButtons = [
+            { id: 'home-screen', label: 'Home', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M3 9.5l9-7 9 7V20c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V9.5z"/></svg>`},
+            { id: 'discover-screen', label: 'Discover', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`},
+            { id: 'create-screen', label: '', icon: `<div class="w-16 h-10 bg-vine-green rounded-lg flex items-center justify-center text-white"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></div>` },
+            { id: 'inbox-screen', label: 'Inbox', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>` },
+            { id: 'profile-screen', label: 'Profile', icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>` }
+        ];
+
+        // --- DUMMY DATA ---
+        const videos = [
+            { id: 1, src: 'video1.mp4', user: '@naturelover', avatar: 'https://i.pravatar.cc/150?u=naturelover', caption: 'Enjoying the waterfall! 🌊 #nature #travel', likes: '12.3k', commentsCount: '204', shares: '88', comments: [{ user: '@scenicfan', text: 'Wow, where is this?', likes: 15, avatar: 'https://i.pravatar.cc/150?u=scenicfan'},{ user: '@adventuretime', text: 'Looks amazing!', likes: 8, avatar: 'https://i.pravatar.cc/150?u=adventuretime'}] },
+            { id: 2, src: 'video2.mp4', user: '@cityscape', avatar: 'https://i.pravatar.cc/150?u=cityscape', caption: 'Tokyo nights are something else. ✨ #tokyo', likes: '45.1k', commentsCount: '1.2k', shares: '540', comments: [ { user: '@nightowl', text: 'Incredible shot!', likes: 99, avatar: 'https://i.pravatar.cc/150?u=nightowl'} ]},
+            { id: 3, src: 'video3.mp4', user: '@coffeefanatic', avatar: 'https://i.pravatar.cc/150?u=coffeefanatic', caption: 'The perfect pour. ☕️ #coffee #latteart', likes: '8.9k', commentsCount: '112', shares: '45', comments: []},
+            { id: 4, src: 'video4.mp4', user: '@skaterboi', avatar: 'https://i.pravatar.cc/150?u=skaterboi', caption: 'Kickflip in slow-mo. #skateboarding', likes: '22.7k', commentsCount: '890', shares: '310', comments: [{ user: '@tonyhawkfan', text: 'Sick!', likes: 150, avatar: 'https://i.pravatar.cc/150?u=tonyhawkfan'},{ user: '@sk8life', text: 'Clean landing!', likes: 78, avatar: 'https://i.pravatar.cc/150?u=sk8life'},]},
+            { id: 5, src: 'video5.mp4', user: '@beachvibes', avatar: 'https://i.pravatar.cc/150?u=beachvibes', caption: 'Sunset at the beach is pure magic. #sunset', likes: '50.2k', commentsCount: '2.5k', shares: '1.1k', comments: [ { user: '@sunsetlover', text: 'Stunning colors.', likes: 234, avatar: 'https://i.pravatar.cc/150?u=sunsetlover' } ]}
+        ];
+
+        // --- UI & LOGIC ---
+        function renderNav() {
+            mainNav.innerHTML = '';
+            navButtons.forEach(btn => {
+                const buttonEl = document.createElement('button');
+                buttonEl.className = `flex flex-col items-center justify-center flex-1 gap-1 transition-colors ${btn.id === activePage ? 'text-vine-green' : 'text-gray-400 hover:text-white'}`;
+                if (btn.label === '') {
+                     buttonEl.innerHTML = btn.icon;
+                } else {
+                     buttonEl.innerHTML = `${btn.icon}<span class="text-xs">${btn.label}</span>`;
+                }
+                if (btn.id === 'profile-screen') {
+                    buttonEl.onclick = () => viewUserProfile(5); // Use a default ID for the main profile
+                } else {
+                    buttonEl.onclick = () => navigateTo(btn.id);
+                }
+                mainNav.appendChild(buttonEl);
+            });
+        }
+
+        function showToast(message) {
+             const toast = document.createElement('div');
+             toast.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm py-2 px-4 rounded-full shadow-lg z-50';
+             toast.textContent = message;
+             document.body.appendChild(toast);
+             setTimeout(() => {
+                 toast.remove();
+             }, 2000);
+        }
+        
+        function toggleLike(button) {
+            const svg = button.querySelector('svg');
+            const isLiked = svg.classList.toggle('text-red-500');
+            svg.classList.toggle('text-white');
+            if(isLiked) {
+                svg.classList.add('like-animation');
+                setTimeout(() => svg.classList.remove('like-animation'), 300);
+            }
+        }
+
+        function renderCaptionWithHashtags(caption) {
+            if (!caption) return '';
+            const hashtagRegex = /(#\w+)/g;
+            return caption.replace(hashtagRegex, `<span class="font-bold text-white cursor-pointer" onclick="event.stopPropagation(); showToast('Viewing hashtag $&')">$&</span>`);
+        }
+
+        function toggleSound(container) {
+            const video = container.querySelector('video');
+            const overlay = container.querySelector('[data-sound-overlay]');
+            if (!video || !overlay) return;
+
+            video.muted = !video.muted;
+
+            const mutedIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="rgba(255,255,255,0.7)" viewBox="0 0 16 16"><path d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06zm7.137 2.096a.5.5 0 0 1 0 .708L11.586 8l2.268 2.268a.5.5 0 0 1-.708.708L10.879 8.707l-2.268 2.268a.5.5 0 0 1-.708-.708L10.17 8 7.904 5.732a.5.5 0 0 1 .708-.708L10.879 7.293l2.268-2.268a.5.5 0 0 1 .708 0z"/></svg>`;
+            const unmutedIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="rgba(255,255,255,0.7)" viewBox="0 0 16 16"><path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-1.414 1.414A6.472 6.472 0 0 1 12.025 8a6.47 6.47 0 0 1-1.904 4.596l1.414 1.414ZM10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596L8.707 2.001A8.466 8.466 0 0 1 14.026 8a8.466 8.466 0 0 1-5.318 7.999l1.414-1.415Z"/><path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596L8.707 2.001A8.466 8.466 0 0 1 14.026 8a8.466 8.466 0 0 1-5.318 7.999l1.414-1.415Z M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06Z"/></svg>`;
+            
+            overlay.innerHTML = video.muted ? mutedIcon : unmutedIcon;
+            overlay.classList.remove('opacity-0');
+            
+            clearTimeout(soundTimeout);
+            soundTimeout = setTimeout(() => {
+                overlay.classList.add('opacity-0');
+            }, 1000);
+        }
+        
+        function navigateTo(pageId) {
+            activePage = pageId;
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            const page = document.getElementById(pageId);
+            if(page) {
+                page.classList.remove('hidden');
+            }
+            renderNav();
+        }
+        
+        function toggleComments(show, videoId) {
+            mainNav.style.transform = show ? 'translateY(100%)' : 'translateY(0)';
+            if (show) {
+                const videoData = videos.find(v => v.id === videoId);
+                if (!videoData) return;
+                const { comments, commentsCount } = videoData;
+                const list = document.getElementById('comments-list');
+                const countEl = document.getElementById('comment-count');
+                list.innerHTML = '';
+                if (comments.length > 0) {
+                    comments.forEach(c => {
+                        const commentDiv = document.createElement('div');
+                        commentDiv.className = 'flex items-start gap-3';
+                        commentDiv.innerHTML = `
+                        <img src="${c.avatar}" class="w-8 h-8 rounded-full">
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-400">${c.user}</p>
+                            <p class="text-sm">${c.text}</p>
+                            <p class="text-xs text-gray-500 mt-1">Reply</p>
+                        </div>
+                        <div class="text-center">
+                            <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            <span class="text-xs text-gray-500">${c.likes}</span>
+                        </div>
+                    `;
+                        list.appendChild(commentDiv);
+                    });
+                } else {
+                    list.innerHTML = `<p class="text-gray-400 text-center">No comments yet.</p>`;
+                }
+                countEl.textContent = `${commentsCount} Comments`;
+                commentsSection.classList.add('is-open');
+            } else {
+                commentsSection.classList.remove('is-open');
+            }
+        }
+
+        function viewUserProfile(videoId) {
+             const userData = videos.find(v => v.id === videoId);
+             if (!userData) return;
+             const profilePage = document.getElementById('profile-screen');
+             profilePage.innerHTML = `
+                <div class="flex flex-col items-center pt-8">
+                     <img src="${userData.avatar}" class="w-24 h-24 rounded-full border-4 border-vine-green mb-4" alt="User Avatar">
+                     <h2 class="text-xl font-bold">${userData.user}</h2>
+                     <div class="flex gap-6 my-4">
+                         <div class="text-center"><p class="font-bold">15</p><p class="text-gray-400 text-sm">Following</p></div>
+                         <div class="text-center"><p class="font-bold">2.1M</p><p class="text-gray-400 text-sm">Followers</p></div>
+                         <div class="text-center"><p class="font-bold">15.4M</p><p class="text-gray-400 text-sm">Likes</p></div>
+                     </div>
+                     <button class="bg-vine-green text-white font-bold py-2 px-10 rounded-md">Follow</button>
+                     <div class="border-t border-gray-700 mt-6 pt-2 w-full">
+                         <p class="text-center text-gray-400">User's videos would appear here.</p>
+                     </div>
+                 </div>
+             `;
+            activePage = 'profile-screen';
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            document.getElementById('profile-screen').classList.remove('hidden');
+            renderNav();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const splashScreen = document.getElementById('splash-screen');
+            const mainContent = document.getElementById('home-screen');
+            const mainNav = document.getElementById('main-nav');
+
+            setTimeout(() => {
+                // Start fading out the splash screen
+                splashScreen.style.opacity = '0';
+
+                // Simultaneously start fading in the main content
+                mainContent.style.opacity = '1';
+                mainNav.style.opacity = '1';
+
+                // Remove splash screen from DOM after transition
+                setTimeout(() => {
+                    splashScreen.classList.add('hidden');
+                }, 300); // Matches the CSS transition duration
+
+            }, 2000); // Initial delay
+            
+            videos.forEach(videoData => {
+                 const container = document.createElement('div');
+                 container.className = 'video-container relative h-full w-full flex-shrink-0';
+                 container.setAttribute('onclick', 'toggleSound(this)');
+
+                 container.innerHTML = `
+                    <video class="video-player" src="${videoData.src}" loop playsinline onerror="this.parentElement.style.backgroundColor='#111'; this.parentElement.innerHTML += '<div class=\'text-white text-center p-4\'>Video not found.</div>'"></video>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" data-sound-overlay>
+                        <!-- Sound icon appears here -->
+                    </div>
+                    <div class="absolute inset-0 flex flex-col justify-end p-4 text-white text-overlay-gradient">
+                        <div class="mb-2">
+                            <div class="flex items-center gap-2 cursor-pointer" onclick='event.stopPropagation(); viewUserProfile(${videoData.id})'>
+                                <img src="${videoData.avatar}" class="w-10 h-10 rounded-full border-2 border-vine-green" alt="User Avatar">
+                                <h3 class="font-bold">${videoData.user}</h3>
+                            </div>
+                            <p class="mt-2 text-sm">${renderCaptionWithHashtags(videoData.caption)}</p>
+                        </div>
+                        <div class="absolute right-2 bottom-16 flex flex-col items-center gap-4">
+                            <button class="flex flex-col items-center gap-1" onclick="event.stopPropagation(); toggleLike(this)">
+                                <svg class="w-8 h-8 text-white transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                <span class="text-xs font-bold">${videoData.likes}</span>
+                            </button>
+                            <button class="flex flex-col items-center gap-1" onclick='event.stopPropagation(); toggleComments(true, ${videoData.id})'>
+                                <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                                <span class="text-xs font-bold">${videoData.commentsCount}</span>
+                            </button>
+                            <button class="flex flex-col items-center gap-1" onclick="event.stopPropagation(); showToast('Share: Not Implemented')">
+                                <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+                                <span class="text-xs font-bold">${videoData.shares}</span>
+                            </button>
+                        </div>
+                    </div>`;
+                 videoFeed.appendChild(container);
+            });
+            
+            renderNav();
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if (entry.isIntersecting) {
+                        document.querySelectorAll('.video-player').forEach(v => v.pause());
+                        video.play().catch(error => {
+                            // Autoplay with sound was blocked, video will start muted.
+                            // User can tap to unmute.
+                            video.muted = true;
+                            video.play();
+                        });
+                    } else {
+                        video.pause();
+                    }
+                });
+            }, { threshold: 0.8 });
+
+            document.querySelectorAll('.video-container').forEach(c => observer.observe(c));
+        });
+    </script>
+</body>
+</html>
+
